@@ -141,24 +141,16 @@ public class GrapplingGun : MonoBehaviour
             }
         }
     }
-    //public void SetGrapplePointNew()
-    //{
-    //    Vector2 direction = transform.forward;
-    //    if (Physics2D.Raycast(firePoint.position, direction))
-    //    {
-    //        RaycastHit2D _hit = Physics2D.Raycast(firePoint.position, direction);
-    //        if(_hit.transform.gameObject.tag == "obstacle" || grappleToAll)
-    //        {
-    //            if(Vector2.Distance(_hit.point, firePoint.position) <= maxDistnace || !hasMaxDistance)
-    //            {
-    //                grapplePoint = _hit.point;
-    //                grappleDistanceVector = grapplePoint - (Vector2)gunPivot.position;
-    //                grappleRope.enabled = true;
-    //            }
 
-    //        }
-    //    }
-    //}
+    public void SetGrapplePointNew(Vector2 pivot)
+    {
+        if(Vector2.Distance(pivot, firePoint.position) <= maxDistnace || !hasMaxDistance)
+        {
+            grapplePoint = pivot;
+            grappleDistanceVector = grapplePoint - (Vector2)gunPivot.position;
+            grappleRope.enabled = true;
+        }
+    }
 
 
 
