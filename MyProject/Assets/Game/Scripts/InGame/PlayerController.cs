@@ -5,14 +5,41 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    private Vector3 m_position;
+    
     private float m_width;
     private float m_height;
+    private float m_Velocity = 20f;
+    private bool m_isFacingRight = true;
     private Rigidbody2D m_rigidbody2D;
     [SerializeField] Transform m_pivotList;
-    private Transform m_pivotCurrent;
+    [SerializeField] private Transform m_pivotCurrent;
+    [SerializeField] private Swing m_swing;
+    private State m_state;
+    private Vector3 m_position;
+
+    
+    public bool isGrounded
+    {
+        get
+        {
+            return m_state == State.Ground;
+        }
+    }
+    private enum State
+    {
+        Ground,
+        Air,
+        Free
+    }
+
     private void Awake()
     {
+        InputController.leftAction += OnMoveLeft;
+        InputController.rightAction += OnMoveRight;
+        InputController.jumpAction += OnJump;
+        InputController.releaseMove += OnReleaseMove;
+        InputController.swing += Swing;
+
         m_width = (float)Screen.width / 2f;
         m_height = (float)Screen.height / 2f;
 
@@ -20,6 +47,15 @@ public class PlayerController : MonoBehaviour
         m_rigidbody2D = gameObject.GetComponent<Rigidbody2D>();
         
     }
+    private void OnDestroy()
+    {
+        InputController.leftAction -= OnMoveLeft;
+        InputController.rightAction -= OnMoveRight;
+        InputController.jumpAction -= OnJump;
+        InputController.releaseMove -= OnReleaseMove;
+        InputController.swing -= Swing;
+    }
+
     private void Start()
     {
 
@@ -46,6 +82,94 @@ public class PlayerController : MonoBehaviour
     {
         GetComponent<GrapplingGun>().SetGrapplePointNew(m_pivotCurrent.position);
     }
+    private void OnMoveLeft()
+    {
+        Move(-1);
+    }
+    private void OnMoveRight()
+    {
+        Move(1);
+    }
+
+    private void OnJump()
+    {
+        Jump();
+    }
+    private void OnReleaseMove()
+    {
+        if(m_state == State.Ground)
+        {
+            m_rigidbody2D.velocity = Vector3.zero;
+        }
+    }
+
+    private void Move(int direction)
+    {
+        if (m_isFacingRight)
+        {
+            if(direction < 0)
+            {
+                Flip();
+            }
+
+        }
+        else
+        {
+            if(direction > 0)
+            {
+                Flip();
+            }
+        }
+
+
+        if (isGrounded)
+        {
+            // ground
+            m_rigidbody2D.velocity = new Vector2(direction * m_Velocity, m_rigidbody2D.velocity.y);
+        }
+        else if (m_state == State.Air)
+        {
+            // air  
+        }
+        else
+        {
+
+        }
+
+        
+    }
+    private void Flip()
+    {
+        m_isFacingRight = !m_isFacingRight;
+        transform.Rotate(0.0f, 180.0f, 0.0f);
+    }
+
+
+    private void Jump()
+    {
+
+    }
+    private void Swing(swingState m_swingState)
+    {
+        //Debug.Log(m_swingState);
+        if(m_swingState == swingState.shoot)
+        {
+            // set grapple point
+            m_swing.GetComponent<Swing>().SetGrapplePoint(m_pivotCurrent.position);
+            //Debug.Log(m_pivotCurrent.position);
+        }
+        if(m_swingState == swingState.hold)
+        {
+            // hold
+            m_swing.GetComponent<Swing>().Pull();
+        }
+        if(m_swingState == swingState.release)
+        {
+            // release
+            m_swing.GetComponent<Swing>().Release();
+        }
+    }
+    
 
     private void SlowMotion(bool isSlow)
     {
@@ -59,29 +183,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void Update()
-    {
-        UpdatePivot();
 
-        if(Input.touchCount > 0)
-        {
-            Touch touch = Input.GetTouch(0);
-
-            if(touch.phase == TouchPhase.Began)
-            {
-                // slow motion
-                SlowMotion(true);
-                GetComponent<GrapplingGun>().SetGrapplePoint();
-            }
-
-            if(touch.phase == TouchPhase.Ended)
-            {
-                //
-                SlowMotion(false);
-                GetComponent<GrapplingGun>().Release();
-            }
-        }
-    }
 
 
 }
